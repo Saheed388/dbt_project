@@ -1,0 +1,44 @@
+version: 2
+
+models:
+  - name: stg_ecommerce_products
+    description: "Products table on the e-commerce store"
+    columns:
+      - name: product_id
+        tests:
+          - not_null:
+              severity: error
+              # warn_if: ">0"
+          - unique:
+              severity: error
+              # error_if: ">2"
+
+      - name: cost
+        description: "How much the product costs to purchase"
+        tests:
+          - not_null
+          - dbt_expectations.expect_column_values_to_be_between:
+              min_value: 0
+
+      - name: retail_price
+        description: "How much the product retails for on the e-commerce platform or store"
+        tests:
+          - not_null
+          - dbt_expectations.expect_column_values_to_be_between:
+              min_value: 0
+
+          - col_greater_than:
+              value: 200
+
+          - dbt_utils.expression_is_true:
+              name: retails_price_is_not_profitable
+              expression: ">=cost"
+
+      - name: department
+        description: "Identifier for item categories such as Menswear or Womenswear"
+        tests:
+          - not_null
+          - accepted_values:
+              values:
+                - "Men"
+                - "Women"
